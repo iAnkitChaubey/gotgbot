@@ -19,7 +19,7 @@ type AddStickerToSetOpts struct {
 
 // AddStickerToSet (https://core.telegram.org/bots/api#addstickertoset)
 //
-// Use this method to add a new sticker to a set created by the bot. The format of the added sticker must match the format of the other stickers in the set. Emoji sticker sets can have up to 200 stickers. Animated and video sticker sets can have up to 50 stickers. Static sticker sets can have up to 120 stickers. Returns True on success.
+// Use this method to add a new sticker to a set created by the bot. Emoji sticker sets can have up to 200 stickers. Other sticker sets can have up to 120 stickers. Returns True on success.
 //   - userId (type int64): User identifier of sticker set owner
 //   - name (type string): Sticker set name
 //   - sticker (type InputSticker): A JSON-serialized object with information about the added sticker. If exactly the same sticker had already been added to the set, then the set isn't changed.
@@ -560,7 +560,7 @@ type CopyMessagesOpts struct {
 // Use this method to copy messages of any kind. If some of the specified messages can't be found or copied, they are skipped. Service messages, giveaway messages, giveaway winners messages, and invoice messages can't be copied. A quiz poll can be copied only if the value of the field correct_option_id is known to the bot. The method is analogous to the method forwardMessages, but the copied messages don't have a link to the original message. Album grouping is kept for copied messages. On success, an array of MessageId of the sent messages is returned.
 //   - chatId (type int64): Unique identifier for the target chat or username of the target channel (in the format @channelusername)
 //   - fromChatId (type int64): Unique identifier for the chat where the original messages were sent (or channel username in the format @channelusername)
-//   - messageIds (type []int64): Identifiers of 1-100 messages in the chat from_chat_id to copy. The identifiers must be specified in a strictly increasing order.
+//   - messageIds (type []int64): A JSON-serialized list of 1-100 identifiers of messages in the chat from_chat_id to copy. The identifiers must be specified in a strictly increasing order.
 //   - opts (type CopyMessagesOpts): All optional parameters.
 func (bot *Bot) CopyMessages(chatId int64, fromChatId int64, messageIds []int64, opts *CopyMessagesOpts) ([]MessageId, error) {
 	v := map[string]string{}
@@ -804,9 +804,8 @@ type CreateNewStickerSetOpts struct {
 //   - name (type string): Short name of sticker set, to be used in t.me/addstickers/ URLs (e.g., animals). Can contain only English letters, digits and underscores. Must begin with a letter, can't contain consecutive underscores and must end in "_by_<bot_username>". <bot_username> is case insensitive. 1-64 characters.
 //   - title (type string): Sticker set title, 1-64 characters
 //   - stickers (type []InputSticker): A JSON-serialized list of 1-50 initial stickers to be added to the sticker set
-//   - stickerFormat (type string): Format of stickers in the set, must be one of "static", "animated", "video"
 //   - opts (type CreateNewStickerSetOpts): All optional parameters.
-func (bot *Bot) CreateNewStickerSet(userId int64, name string, title string, stickers []InputSticker, stickerFormat string, opts *CreateNewStickerSetOpts) (bool, error) {
+func (bot *Bot) CreateNewStickerSet(userId int64, name string, title string, stickers []InputSticker, opts *CreateNewStickerSetOpts) (bool, error) {
 	v := map[string]string{}
 	data := map[string]NamedReader{}
 	v["user_id"] = strconv.FormatInt(userId, 10)
@@ -827,7 +826,6 @@ func (bot *Bot) CreateNewStickerSet(userId int64, name string, title string, sti
 		}
 		v["stickers"] = string(bs)
 	}
-	v["sticker_format"] = stickerFormat
 	if opts != nil {
 		v["sticker_type"] = opts.StickerType
 		v["needs_repainting"] = strconv.FormatBool(opts.NeedsRepainting)
@@ -1018,7 +1016,7 @@ type DeleteMessagesOpts struct {
 //
 // Use this method to delete multiple messages simultaneously. If some of the specified messages can't be found, they are skipped. Returns True on success.
 //   - chatId (type int64): Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-//   - messageIds (type []int64): Identifiers of 1-100 messages to delete. See deleteMessage for limitations on which messages can be deleted
+//   - messageIds (type []int64): A JSON-serialized list of 1-100 identifiers of messages to delete. See deleteMessage for limitations on which messages can be deleted
 //   - opts (type DeleteMessagesOpts): All optional parameters.
 func (bot *Bot) DeleteMessages(chatId int64, messageIds []int64, opts *DeleteMessagesOpts) (bool, error) {
 	v := map[string]string{}
@@ -1736,7 +1734,7 @@ type ForwardMessagesOpts struct {
 // Use this method to forward multiple messages of any kind. If some of the specified messages can't be found or forwarded, they are skipped. Service messages and messages with protected content can't be forwarded. Album grouping is kept for forwarded messages. On success, an array of MessageId of the sent messages is returned.
 //   - chatId (type int64): Unique identifier for the target chat or username of the target channel (in the format @channelusername)
 //   - fromChatId (type int64): Unique identifier for the chat where the original messages were sent (or channel username in the format @channelusername)
-//   - messageIds (type []int64): Identifiers of 1-100 messages in the chat from_chat_id to forward. The identifiers must be specified in a strictly increasing order.
+//   - messageIds (type []int64): A JSON-serialized list of 1-100 identifiers of messages in the chat from_chat_id to forward. The identifiers must be specified in a strictly increasing order.
 //   - opts (type ForwardMessagesOpts): All optional parameters.
 func (bot *Bot) ForwardMessages(chatId int64, fromChatId int64, messageIds []int64, opts *ForwardMessagesOpts) ([]MessageId, error) {
 	v := map[string]string{}
@@ -1769,6 +1767,35 @@ func (bot *Bot) ForwardMessages(chatId int64, fromChatId int64, messageIds []int
 
 	var m []MessageId
 	return m, json.Unmarshal(r, &m)
+}
+
+// GetBusinessConnectionOpts is the set of optional fields for Bot.GetBusinessConnection.
+type GetBusinessConnectionOpts struct {
+	// RequestOpts are an additional optional field to configure timeouts for individual requests
+	RequestOpts *RequestOpts
+}
+
+// GetBusinessConnection (https://core.telegram.org/bots/api#getbusinessconnection)
+//
+// Use this method to get information about the connection of the bot with a business account. Returns a BusinessConnection object on success.
+//   - businessConnectionId (type string): Unique identifier of the business connection
+//   - opts (type GetBusinessConnectionOpts): All optional parameters.
+func (bot *Bot) GetBusinessConnection(businessConnectionId string, opts *GetBusinessConnectionOpts) (*BusinessConnection, error) {
+	v := map[string]string{}
+	v["business_connection_id"] = businessConnectionId
+
+	var reqOpts *RequestOpts
+	if opts != nil {
+		reqOpts = opts.RequestOpts
+	}
+
+	r, err := bot.Request("getBusinessConnection", v, nil, reqOpts)
+	if err != nil {
+		return nil, err
+	}
+
+	var b BusinessConnection
+	return &b, json.Unmarshal(r, &b)
 }
 
 // GetChatOpts is the set of optional fields for Bot.GetChat.
@@ -1929,7 +1956,7 @@ type GetCustomEmojiStickersOpts struct {
 // GetCustomEmojiStickers (https://core.telegram.org/bots/api#getcustomemojistickers)
 //
 // Use this method to get information about custom emoji stickers by their identifiers. Returns an Array of Sticker objects.
-//   - customEmojiIds (type []string): List of custom emoji identifiers. At most 200 custom emoji identifiers can be specified.
+//   - customEmojiIds (type []string): A JSON-serialized list of custom emoji identifiers. At most 200 custom emoji identifiers can be specified.
 //   - opts (type GetCustomEmojiStickersOpts): All optional parameters.
 func (bot *Bot) GetCustomEmojiStickers(customEmojiIds []string, opts *GetCustomEmojiStickersOpts) ([]Sticker, error) {
 	v := map[string]string{}
@@ -2576,13 +2603,13 @@ type PromoteChatMemberOpts struct {
 	CanEditStories bool
 	// Pass True if the administrator can delete stories posted by other users
 	CanDeleteStories bool
-	// Pass True if the administrator can post messages in the channel, or access channel statistics; channels only
+	// Pass True if the administrator can post messages in the channel, or access channel statistics; for channels only
 	CanPostMessages bool
-	// Pass True if the administrator can edit messages of other users and can pin messages; channels only
+	// Pass True if the administrator can edit messages of other users and can pin messages; for channels only
 	CanEditMessages bool
-	// Pass True if the administrator can pin messages, supergroups only
+	// Pass True if the administrator can pin messages; for supergroups only
 	CanPinMessages bool
-	// Pass True if the user is allowed to create, rename, close, and reopen forum topics, supergroups only
+	// Pass True if the user is allowed to create, rename, close, and reopen forum topics; for supergroups only
 	CanManageTopics bool
 	// RequestOpts are an additional optional field to configure timeouts for individual requests
 	RequestOpts *RequestOpts
@@ -2690,6 +2717,46 @@ func (bot *Bot) ReopenGeneralForumTopic(chatId int64, opts *ReopenGeneralForumTo
 	return b, json.Unmarshal(r, &b)
 }
 
+// ReplaceStickerInSetOpts is the set of optional fields for Bot.ReplaceStickerInSet.
+type ReplaceStickerInSetOpts struct {
+	// RequestOpts are an additional optional field to configure timeouts for individual requests
+	RequestOpts *RequestOpts
+}
+
+// ReplaceStickerInSet (https://core.telegram.org/bots/api#replacestickerinset)
+//
+// Use this method to replace an existing sticker in a sticker set with a new one. The method is equivalent to calling deleteStickerFromSet, then addStickerToSet, then setStickerPositionInSet. Returns True on success.
+//   - userId (type int64): User identifier of the sticker set owner
+//   - name (type string): Sticker set name
+//   - oldSticker (type string): File identifier of the replaced sticker
+//   - sticker (type InputSticker): A JSON-serialized object with information about the added sticker. If exactly the same sticker had already been added to the set, then the set remains unchanged.
+//   - opts (type ReplaceStickerInSetOpts): All optional parameters.
+func (bot *Bot) ReplaceStickerInSet(userId int64, name string, oldSticker string, sticker InputSticker, opts *ReplaceStickerInSetOpts) (bool, error) {
+	v := map[string]string{}
+	data := map[string]NamedReader{}
+	v["user_id"] = strconv.FormatInt(userId, 10)
+	v["name"] = name
+	v["old_sticker"] = oldSticker
+	inputBs, err := sticker.InputParams("sticker", data)
+	if err != nil {
+		return false, fmt.Errorf("failed to marshal field sticker: %w", err)
+	}
+	v["sticker"] = string(inputBs)
+
+	var reqOpts *RequestOpts
+	if opts != nil {
+		reqOpts = opts.RequestOpts
+	}
+
+	r, err := bot.Request("replaceStickerInSet", v, data, reqOpts)
+	if err != nil {
+		return false, err
+	}
+
+	var b bool
+	return b, json.Unmarshal(r, &b)
+}
+
 // RestrictChatMemberOpts is the set of optional fields for Bot.RestrictChatMember.
 type RestrictChatMemberOpts struct {
 	// Pass True if chat permissions are set independently. Otherwise, the can_send_other_messages and can_add_web_page_previews permissions will imply the can_send_messages, can_send_audios, can_send_documents, can_send_photos, can_send_videos, can_send_video_notes, and can_send_voice_notes permissions; the can_send_polls permission will imply the can_send_messages permission.
@@ -2770,6 +2837,8 @@ func (bot *Bot) RevokeChatInviteLink(chatId int64, inviteLink string, opts *Revo
 
 // SendAnimationOpts is the set of optional fields for Bot.SendAnimation.
 type SendAnimationOpts struct {
+	// Unique identifier of the business connection on behalf of which the message will be sent
+	BusinessConnectionId string
 	// Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
 	MessageThreadId int64
 	// Duration of sent animation in seconds
@@ -2794,7 +2863,7 @@ type SendAnimationOpts struct {
 	ProtectContent bool
 	// Description of the message to reply to
 	ReplyParameters *ReplyParameters
-	// Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove reply keyboard or to force a reply from the user.
+	// Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user. Not supported for messages sent on behalf of a business account
 	ReplyMarkup ReplyMarkup
 	// RequestOpts are an additional optional field to configure timeouts for individual requests
 	RequestOpts *RequestOpts
@@ -2832,6 +2901,7 @@ func (bot *Bot) SendAnimation(chatId int64, animation InputFile, opts *SendAnima
 		}
 	}
 	if opts != nil {
+		v["business_connection_id"] = opts.BusinessConnectionId
 		if opts.MessageThreadId != 0 {
 			v["message_thread_id"] = strconv.FormatInt(opts.MessageThreadId, 10)
 		}
@@ -2909,6 +2979,8 @@ func (bot *Bot) SendAnimation(chatId int64, animation InputFile, opts *SendAnima
 
 // SendAudioOpts is the set of optional fields for Bot.SendAudio.
 type SendAudioOpts struct {
+	// Unique identifier of the business connection on behalf of which the message will be sent
+	BusinessConnectionId string
 	// Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
 	MessageThreadId int64
 	// Audio caption, 0-1024 characters after entities parsing
@@ -2931,7 +3003,7 @@ type SendAudioOpts struct {
 	ProtectContent bool
 	// Description of the message to reply to
 	ReplyParameters *ReplyParameters
-	// Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove reply keyboard or to force a reply from the user.
+	// Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user. Not supported for messages sent on behalf of a business account
 	ReplyMarkup ReplyMarkup
 	// RequestOpts are an additional optional field to configure timeouts for individual requests
 	RequestOpts *RequestOpts
@@ -2970,6 +3042,7 @@ func (bot *Bot) SendAudio(chatId int64, audio InputFile, opts *SendAudioOpts) (*
 		}
 	}
 	if opts != nil {
+		v["business_connection_id"] = opts.BusinessConnectionId
 		if opts.MessageThreadId != 0 {
 			v["message_thread_id"] = strconv.FormatInt(opts.MessageThreadId, 10)
 		}
@@ -3042,7 +3115,9 @@ func (bot *Bot) SendAudio(chatId int64, audio InputFile, opts *SendAudioOpts) (*
 
 // SendChatActionOpts is the set of optional fields for Bot.SendChatAction.
 type SendChatActionOpts struct {
-	// Unique identifier for the target message thread; supergroups only
+	// Unique identifier of the business connection on behalf of which the action will be sent
+	BusinessConnectionId string
+	// Unique identifier for the target message thread; for supergroups only
 	MessageThreadId int64
 	// RequestOpts are an additional optional field to configure timeouts for individual requests
 	RequestOpts *RequestOpts
@@ -3060,6 +3135,7 @@ func (bot *Bot) SendChatAction(chatId int64, action string, opts *SendChatAction
 	v["chat_id"] = strconv.FormatInt(chatId, 10)
 	v["action"] = action
 	if opts != nil {
+		v["business_connection_id"] = opts.BusinessConnectionId
 		if opts.MessageThreadId != 0 {
 			v["message_thread_id"] = strconv.FormatInt(opts.MessageThreadId, 10)
 		}
@@ -3081,6 +3157,8 @@ func (bot *Bot) SendChatAction(chatId int64, action string, opts *SendChatAction
 
 // SendContactOpts is the set of optional fields for Bot.SendContact.
 type SendContactOpts struct {
+	// Unique identifier of the business connection on behalf of which the message will be sent
+	BusinessConnectionId string
 	// Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
 	MessageThreadId int64
 	// Contact's last name
@@ -3093,7 +3171,7 @@ type SendContactOpts struct {
 	ProtectContent bool
 	// Description of the message to reply to
 	ReplyParameters *ReplyParameters
-	// Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove reply keyboard or to force a reply from the user.
+	// Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user. Not supported for messages sent on behalf of a business account
 	ReplyMarkup ReplyMarkup
 	// RequestOpts are an additional optional field to configure timeouts for individual requests
 	RequestOpts *RequestOpts
@@ -3112,6 +3190,7 @@ func (bot *Bot) SendContact(chatId int64, phoneNumber string, firstName string, 
 	v["phone_number"] = phoneNumber
 	v["first_name"] = firstName
 	if opts != nil {
+		v["business_connection_id"] = opts.BusinessConnectionId
 		if opts.MessageThreadId != 0 {
 			v["message_thread_id"] = strconv.FormatInt(opts.MessageThreadId, 10)
 		}
@@ -3151,6 +3230,8 @@ func (bot *Bot) SendContact(chatId int64, phoneNumber string, firstName string, 
 
 // SendDiceOpts is the set of optional fields for Bot.SendDice.
 type SendDiceOpts struct {
+	// Unique identifier of the business connection on behalf of which the message will be sent
+	BusinessConnectionId string
 	// Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
 	MessageThreadId int64
 	// Emoji on which the dice throw animation is based. Currently, must be one of "🎲", "🎯", "🏀", "⚽", "🎳", or "🎰". Dice can have values 1-6 for "🎲", "🎯" and "🎳", values 1-5 for "🏀" and "⚽", and values 1-64 for "🎰". Defaults to "🎲"
@@ -3161,7 +3242,7 @@ type SendDiceOpts struct {
 	ProtectContent bool
 	// Description of the message to reply to
 	ReplyParameters *ReplyParameters
-	// Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove reply keyboard or to force a reply from the user.
+	// Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user. Not supported for messages sent on behalf of a business account
 	ReplyMarkup ReplyMarkup
 	// RequestOpts are an additional optional field to configure timeouts for individual requests
 	RequestOpts *RequestOpts
@@ -3176,6 +3257,7 @@ func (bot *Bot) SendDice(chatId int64, opts *SendDiceOpts) (*Message, error) {
 	v := map[string]string{}
 	v["chat_id"] = strconv.FormatInt(chatId, 10)
 	if opts != nil {
+		v["business_connection_id"] = opts.BusinessConnectionId
 		if opts.MessageThreadId != 0 {
 			v["message_thread_id"] = strconv.FormatInt(opts.MessageThreadId, 10)
 		}
@@ -3214,6 +3296,8 @@ func (bot *Bot) SendDice(chatId int64, opts *SendDiceOpts) (*Message, error) {
 
 // SendDocumentOpts is the set of optional fields for Bot.SendDocument.
 type SendDocumentOpts struct {
+	// Unique identifier of the business connection on behalf of which the message will be sent
+	BusinessConnectionId string
 	// Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
 	MessageThreadId int64
 	// Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using multipart/form-data. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass "attach://<file_attach_name>" if the thumbnail was uploaded using multipart/form-data under <file_attach_name>. More information on Sending Files: https://core.telegram.org/bots/api#sending-files
@@ -3232,7 +3316,7 @@ type SendDocumentOpts struct {
 	ProtectContent bool
 	// Description of the message to reply to
 	ReplyParameters *ReplyParameters
-	// Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove reply keyboard or to force a reply from the user.
+	// Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user. Not supported for messages sent on behalf of a business account
 	ReplyMarkup ReplyMarkup
 	// RequestOpts are an additional optional field to configure timeouts for individual requests
 	RequestOpts *RequestOpts
@@ -3270,6 +3354,7 @@ func (bot *Bot) SendDocument(chatId int64, document InputFile, opts *SendDocumen
 		}
 	}
 	if opts != nil {
+		v["business_connection_id"] = opts.BusinessConnectionId
 		if opts.MessageThreadId != 0 {
 			v["message_thread_id"] = strconv.FormatInt(opts.MessageThreadId, 10)
 		}
@@ -3338,6 +3423,8 @@ func (bot *Bot) SendDocument(chatId int64, document InputFile, opts *SendDocumen
 
 // SendGameOpts is the set of optional fields for Bot.SendGame.
 type SendGameOpts struct {
+	// Unique identifier of the business connection on behalf of which the message will be sent
+	BusinessConnectionId string
 	// Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
 	MessageThreadId int64
 	// Sends the message silently. Users will receive a notification with no sound.
@@ -3346,7 +3433,7 @@ type SendGameOpts struct {
 	ProtectContent bool
 	// Description of the message to reply to
 	ReplyParameters *ReplyParameters
-	// A JSON-serialized object for an inline keyboard. If empty, one 'Play game_title' button will be shown. If not empty, the first button must launch the game.
+	// A JSON-serialized object for an inline keyboard. If empty, one 'Play game_title' button will be shown. If not empty, the first button must launch the game. Not supported for messages sent on behalf of a business account.
 	ReplyMarkup InlineKeyboardMarkup
 	// RequestOpts are an additional optional field to configure timeouts for individual requests
 	RequestOpts *RequestOpts
@@ -3363,6 +3450,7 @@ func (bot *Bot) SendGame(chatId int64, gameShortName string, opts *SendGameOpts)
 	v["chat_id"] = strconv.FormatInt(chatId, 10)
 	v["game_short_name"] = gameShortName
 	if opts != nil {
+		v["business_connection_id"] = opts.BusinessConnectionId
 		if opts.MessageThreadId != 0 {
 			v["message_thread_id"] = strconv.FormatInt(opts.MessageThreadId, 10)
 		}
@@ -3533,6 +3621,8 @@ func (bot *Bot) SendInvoice(chatId int64, title string, description string, payl
 
 // SendLocationOpts is the set of optional fields for Bot.SendLocation.
 type SendLocationOpts struct {
+	// Unique identifier of the business connection on behalf of which the message will be sent
+	BusinessConnectionId string
 	// Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
 	MessageThreadId int64
 	// The radius of uncertainty for the location, measured in meters; 0-1500
@@ -3549,7 +3639,7 @@ type SendLocationOpts struct {
 	ProtectContent bool
 	// Description of the message to reply to
 	ReplyParameters *ReplyParameters
-	// Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove reply keyboard or to force a reply from the user.
+	// Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user. Not supported for messages sent on behalf of a business account
 	ReplyMarkup ReplyMarkup
 	// RequestOpts are an additional optional field to configure timeouts for individual requests
 	RequestOpts *RequestOpts
@@ -3568,6 +3658,7 @@ func (bot *Bot) SendLocation(chatId int64, latitude float64, longitude float64, 
 	v["latitude"] = strconv.FormatFloat(latitude, 'f', -1, 64)
 	v["longitude"] = strconv.FormatFloat(longitude, 'f', -1, 64)
 	if opts != nil {
+		v["business_connection_id"] = opts.BusinessConnectionId
 		if opts.MessageThreadId != 0 {
 			v["message_thread_id"] = strconv.FormatInt(opts.MessageThreadId, 10)
 		}
@@ -3617,6 +3708,8 @@ func (bot *Bot) SendLocation(chatId int64, latitude float64, longitude float64, 
 
 // SendMediaGroupOpts is the set of optional fields for Bot.SendMediaGroup.
 type SendMediaGroupOpts struct {
+	// Unique identifier of the business connection on behalf of which the message will be sent
+	BusinessConnectionId string
 	// Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
 	MessageThreadId int64
 	// Sends messages silently. Users will receive a notification with no sound.
@@ -3655,6 +3748,7 @@ func (bot *Bot) SendMediaGroup(chatId int64, media []InputMedia, opts *SendMedia
 		v["media"] = string(bs)
 	}
 	if opts != nil {
+		v["business_connection_id"] = opts.BusinessConnectionId
 		if opts.MessageThreadId != 0 {
 			v["message_thread_id"] = strconv.FormatInt(opts.MessageThreadId, 10)
 		}
@@ -3685,6 +3779,8 @@ func (bot *Bot) SendMediaGroup(chatId int64, media []InputMedia, opts *SendMedia
 
 // SendMessageOpts is the set of optional fields for Bot.SendMessage.
 type SendMessageOpts struct {
+	// Unique identifier of the business connection on behalf of which the message will be sent
+	BusinessConnectionId string
 	// Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
 	MessageThreadId int64
 	// Mode for parsing entities in the message text. See formatting options for more details.
@@ -3699,7 +3795,7 @@ type SendMessageOpts struct {
 	ProtectContent bool
 	// Description of the message to reply to
 	ReplyParameters *ReplyParameters
-	// Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove reply keyboard or to force a reply from the user.
+	// Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user. Not supported for messages sent on behalf of a business account
 	ReplyMarkup ReplyMarkup
 	// RequestOpts are an additional optional field to configure timeouts for individual requests
 	RequestOpts *RequestOpts
@@ -3716,6 +3812,7 @@ func (bot *Bot) SendMessage(chatId int64, text string, opts *SendMessageOpts) (*
 	v["chat_id"] = strconv.FormatInt(chatId, 10)
 	v["text"] = text
 	if opts != nil {
+		v["business_connection_id"] = opts.BusinessConnectionId
 		if opts.MessageThreadId != 0 {
 			v["message_thread_id"] = strconv.FormatInt(opts.MessageThreadId, 10)
 		}
@@ -3768,6 +3865,8 @@ func (bot *Bot) SendMessage(chatId int64, text string, opts *SendMessageOpts) (*
 
 // SendPhotoOpts is the set of optional fields for Bot.SendPhoto.
 type SendPhotoOpts struct {
+	// Unique identifier of the business connection on behalf of which the message will be sent
+	BusinessConnectionId string
 	// Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
 	MessageThreadId int64
 	// Photo caption (may also be used when resending photos by file_id), 0-1024 characters after entities parsing
@@ -3784,7 +3883,7 @@ type SendPhotoOpts struct {
 	ProtectContent bool
 	// Description of the message to reply to
 	ReplyParameters *ReplyParameters
-	// Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove reply keyboard or to force a reply from the user.
+	// Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user. Not supported for messages sent on behalf of a business account
 	ReplyMarkup ReplyMarkup
 	// RequestOpts are an additional optional field to configure timeouts for individual requests
 	RequestOpts *RequestOpts
@@ -3822,6 +3921,7 @@ func (bot *Bot) SendPhoto(chatId int64, photo InputFile, opts *SendPhotoOpts) (*
 		}
 	}
 	if opts != nil {
+		v["business_connection_id"] = opts.BusinessConnectionId
 		if opts.MessageThreadId != 0 {
 			v["message_thread_id"] = strconv.FormatInt(opts.MessageThreadId, 10)
 		}
@@ -3869,6 +3969,8 @@ func (bot *Bot) SendPhoto(chatId int64, photo InputFile, opts *SendPhotoOpts) (*
 
 // SendPollOpts is the set of optional fields for Bot.SendPoll.
 type SendPollOpts struct {
+	// Unique identifier of the business connection on behalf of which the message will be sent
+	BusinessConnectionId string
 	// Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
 	MessageThreadId int64
 	// True, if the poll needs to be anonymous, defaults to True
@@ -3897,7 +3999,7 @@ type SendPollOpts struct {
 	ProtectContent bool
 	// Description of the message to reply to
 	ReplyParameters *ReplyParameters
-	// Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove reply keyboard or to force a reply from the user.
+	// Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user. Not supported for messages sent on behalf of a business account
 	ReplyMarkup ReplyMarkup
 	// RequestOpts are an additional optional field to configure timeouts for individual requests
 	RequestOpts *RequestOpts
@@ -3922,6 +4024,7 @@ func (bot *Bot) SendPoll(chatId int64, question string, options []string, opts *
 		v["options"] = string(bs)
 	}
 	if opts != nil {
+		v["business_connection_id"] = opts.BusinessConnectionId
 		if opts.MessageThreadId != 0 {
 			v["message_thread_id"] = strconv.FormatInt(opts.MessageThreadId, 10)
 		}
@@ -3982,6 +4085,8 @@ func (bot *Bot) SendPoll(chatId int64, question string, options []string, opts *
 
 // SendStickerOpts is the set of optional fields for Bot.SendSticker.
 type SendStickerOpts struct {
+	// Unique identifier of the business connection on behalf of which the message will be sent
+	BusinessConnectionId string
 	// Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
 	MessageThreadId int64
 	// Emoji associated with the sticker; only for just uploaded stickers
@@ -3992,7 +4097,7 @@ type SendStickerOpts struct {
 	ProtectContent bool
 	// Description of the message to reply to
 	ReplyParameters *ReplyParameters
-	// Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove reply keyboard or to force a reply from the user.
+	// Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove reply keyboard or to force a reply from the user. Not supported for messages sent on behalf of a business account.
 	ReplyMarkup ReplyMarkup
 	// RequestOpts are an additional optional field to configure timeouts for individual requests
 	RequestOpts *RequestOpts
@@ -4002,7 +4107,7 @@ type SendStickerOpts struct {
 //
 // Use this method to send static .WEBP, animated .TGS, or video .WEBM stickers. On success, the sent Message is returned.
 //   - chatId (type int64): Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-//   - sticker (type InputFile): Sticker to send. Pass a file_id as String to send a file that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get a .WEBP sticker from the Internet, or upload a new .WEBP or .TGS sticker using multipart/form-data. More information on Sending Files: https://core.telegram.org/bots/api#sending-files. Video stickers can only be sent by a file_id. Animated stickers can't be sent via an HTTP URL.
+//   - sticker (type InputFile): Sticker to send. Pass a file_id as String to send a file that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get a .WEBP sticker from the Internet, or upload a new .WEBP, .TGS, or .WEBM sticker using multipart/form-data. More information on Sending Files: https://core.telegram.org/bots/api#sending-files. Video and animated stickers can't be sent via an HTTP URL.
 //   - opts (type SendStickerOpts): All optional parameters.
 func (bot *Bot) SendSticker(chatId int64, sticker InputFile, opts *SendStickerOpts) (*Message, error) {
 	v := map[string]string{}
@@ -4030,6 +4135,7 @@ func (bot *Bot) SendSticker(chatId int64, sticker InputFile, opts *SendStickerOp
 		}
 	}
 	if opts != nil {
+		v["business_connection_id"] = opts.BusinessConnectionId
 		if opts.MessageThreadId != 0 {
 			v["message_thread_id"] = strconv.FormatInt(opts.MessageThreadId, 10)
 		}
@@ -4068,6 +4174,8 @@ func (bot *Bot) SendSticker(chatId int64, sticker InputFile, opts *SendStickerOp
 
 // SendVenueOpts is the set of optional fields for Bot.SendVenue.
 type SendVenueOpts struct {
+	// Unique identifier of the business connection on behalf of which the message will be sent
+	BusinessConnectionId string
 	// Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
 	MessageThreadId int64
 	// Foursquare identifier of the venue
@@ -4084,7 +4192,7 @@ type SendVenueOpts struct {
 	ProtectContent bool
 	// Description of the message to reply to
 	ReplyParameters *ReplyParameters
-	// Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove reply keyboard or to force a reply from the user.
+	// Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user. Not supported for messages sent on behalf of a business account
 	ReplyMarkup ReplyMarkup
 	// RequestOpts are an additional optional field to configure timeouts for individual requests
 	RequestOpts *RequestOpts
@@ -4107,6 +4215,7 @@ func (bot *Bot) SendVenue(chatId int64, latitude float64, longitude float64, tit
 	v["title"] = title
 	v["address"] = address
 	if opts != nil {
+		v["business_connection_id"] = opts.BusinessConnectionId
 		if opts.MessageThreadId != 0 {
 			v["message_thread_id"] = strconv.FormatInt(opts.MessageThreadId, 10)
 		}
@@ -4148,6 +4257,8 @@ func (bot *Bot) SendVenue(chatId int64, latitude float64, longitude float64, tit
 
 // SendVideoOpts is the set of optional fields for Bot.SendVideo.
 type SendVideoOpts struct {
+	// Unique identifier of the business connection on behalf of which the message will be sent
+	BusinessConnectionId string
 	// Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
 	MessageThreadId int64
 	// Duration of sent video in seconds
@@ -4174,7 +4285,7 @@ type SendVideoOpts struct {
 	ProtectContent bool
 	// Description of the message to reply to
 	ReplyParameters *ReplyParameters
-	// Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove reply keyboard or to force a reply from the user.
+	// Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user. Not supported for messages sent on behalf of a business account
 	ReplyMarkup ReplyMarkup
 	// RequestOpts are an additional optional field to configure timeouts for individual requests
 	RequestOpts *RequestOpts
@@ -4212,6 +4323,7 @@ func (bot *Bot) SendVideo(chatId int64, video InputFile, opts *SendVideoOpts) (*
 		}
 	}
 	if opts != nil {
+		v["business_connection_id"] = opts.BusinessConnectionId
 		if opts.MessageThreadId != 0 {
 			v["message_thread_id"] = strconv.FormatInt(opts.MessageThreadId, 10)
 		}
@@ -4290,6 +4402,8 @@ func (bot *Bot) SendVideo(chatId int64, video InputFile, opts *SendVideoOpts) (*
 
 // SendVideoNoteOpts is the set of optional fields for Bot.SendVideoNote.
 type SendVideoNoteOpts struct {
+	// Unique identifier of the business connection on behalf of which the message will be sent
+	BusinessConnectionId string
 	// Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
 	MessageThreadId int64
 	// Duration of sent video in seconds
@@ -4304,7 +4418,7 @@ type SendVideoNoteOpts struct {
 	ProtectContent bool
 	// Description of the message to reply to
 	ReplyParameters *ReplyParameters
-	// Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove reply keyboard or to force a reply from the user.
+	// Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user. Not supported for messages sent on behalf of a business account
 	ReplyMarkup ReplyMarkup
 	// RequestOpts are an additional optional field to configure timeouts for individual requests
 	RequestOpts *RequestOpts
@@ -4342,6 +4456,7 @@ func (bot *Bot) SendVideoNote(chatId int64, videoNote InputFile, opts *SendVideo
 		}
 	}
 	if opts != nil {
+		v["business_connection_id"] = opts.BusinessConnectionId
 		if opts.MessageThreadId != 0 {
 			v["message_thread_id"] = strconv.FormatInt(opts.MessageThreadId, 10)
 		}
@@ -4406,6 +4521,8 @@ func (bot *Bot) SendVideoNote(chatId int64, videoNote InputFile, opts *SendVideo
 
 // SendVoiceOpts is the set of optional fields for Bot.SendVoice.
 type SendVoiceOpts struct {
+	// Unique identifier of the business connection on behalf of which the message will be sent
+	BusinessConnectionId string
 	// Unique identifier for the target message thread (topic) of the forum; for forum supergroups only
 	MessageThreadId int64
 	// Voice message caption, 0-1024 characters after entities parsing
@@ -4422,7 +4539,7 @@ type SendVoiceOpts struct {
 	ProtectContent bool
 	// Description of the message to reply to
 	ReplyParameters *ReplyParameters
-	// Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove reply keyboard or to force a reply from the user.
+	// Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user. Not supported for messages sent on behalf of a business account
 	ReplyMarkup ReplyMarkup
 	// RequestOpts are an additional optional field to configure timeouts for individual requests
 	RequestOpts *RequestOpts
@@ -4460,6 +4577,7 @@ func (bot *Bot) SendVoice(chatId int64, voice InputFile, opts *SendVoiceOpts) (*
 		}
 	}
 	if opts != nil {
+		v["business_connection_id"] = opts.BusinessConnectionId
 		if opts.MessageThreadId != 0 {
 			v["message_thread_id"] = strconv.FormatInt(opts.MessageThreadId, 10)
 		}
@@ -4862,7 +4980,7 @@ func (bot *Bot) SetGameScore(userId int64, score int64, opts *SetGameScoreOpts) 
 
 // SetMessageReactionOpts is the set of optional fields for Bot.SetMessageReaction.
 type SetMessageReactionOpts struct {
-	// New list of reaction types to set on the message. Currently, as non-premium users, bots can set up to one reaction per message. A custom emoji reaction can be used if it is either already present on the message or explicitly allowed by chat administrators.
+	// A JSON-serialized list of reaction types to set on the message. Currently, as non-premium users, bots can set up to one reaction per message. A custom emoji reaction can be used if it is either already present on the message or explicitly allowed by chat administrators.
 	Reaction []ReactionType
 	// Pass True to set the reaction with a big animation
 	IsBig bool
@@ -5297,12 +5415,14 @@ type SetStickerSetThumbnailOpts struct {
 // Use this method to set the thumbnail of a regular or mask sticker set. The format of the thumbnail file must match the format of the stickers in the set. Returns True on success.
 //   - name (type string): Sticker set name
 //   - userId (type int64): User identifier of the sticker set owner
+//   - format (type string): Format of the thumbnail, must be one of "static" for a .WEBP or .PNG image, "animated" for a .TGS animation, or "video" for a WEBM video
 //   - opts (type SetStickerSetThumbnailOpts): All optional parameters.
-func (bot *Bot) SetStickerSetThumbnail(name string, userId int64, opts *SetStickerSetThumbnailOpts) (bool, error) {
+func (bot *Bot) SetStickerSetThumbnail(name string, userId int64, format string, opts *SetStickerSetThumbnailOpts) (bool, error) {
 	v := map[string]string{}
 	data := map[string]NamedReader{}
 	v["name"] = name
 	v["user_id"] = strconv.FormatInt(userId, 10)
+	v["format"] = format
 	if opts != nil {
 		if opts.Thumbnail != nil {
 			switch m := opts.Thumbnail.(type) {
@@ -5774,7 +5894,7 @@ type UploadStickerFileOpts struct {
 
 // UploadStickerFile (https://core.telegram.org/bots/api#uploadstickerfile)
 //
-// Use this method to upload a file with a sticker for later use in the createNewStickerSet and addStickerToSet methods (the file can be used multiple times). Returns the uploaded File on success.
+// Use this method to upload a file with a sticker for later use in the createNewStickerSet, addStickerToSet, or replaceStickerInSet methods (the file can be used multiple times). Returns the uploaded File on success.
 //   - userId (type int64): User identifier of sticker file owner
 //   - sticker (type InputFile): A file with the sticker in .WEBP, .PNG, .TGS, or .WEBM format. See https://core.telegram.org/stickers for technical requirements. More information on Sending Files: https://core.telegram.org/bots/api#sending-files
 //   - stickerFormat (type string): Format of the sticker, must be one of "static", "animated", "video"

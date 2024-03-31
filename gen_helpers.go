@@ -3,6 +3,11 @@
 
 package gotgbot
 
+// Get Helper method for Bot.GetBusinessConnection.
+func (bc BusinessConnection) Get(b *Bot, opts *GetBusinessConnectionOpts) (*BusinessConnection, error) {
+	return b.GetBusinessConnection(bc.Id, opts)
+}
+
 // Answer Helper method for Bot.AnswerCallbackQuery.
 func (cq CallbackQuery) Answer(b *Bot, opts *AnswerCallbackQueryOpts) (bool, error) {
 	return b.AnswerCallbackQuery(cq.Id, opts)
