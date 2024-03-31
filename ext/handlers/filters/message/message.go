@@ -93,6 +93,10 @@ func Channel(msg *gotgbot.Message) bool {
 	return msg.Chat.Type == "channel"
 }
 
+func Business(msg *gotgbot.Message) bool {
+	return msg.BusinessConnectionId != ""
+}
+
 func Forwarded(msg *gotgbot.Message) bool {
 	return msg.ForwardOrigin != nil
 }

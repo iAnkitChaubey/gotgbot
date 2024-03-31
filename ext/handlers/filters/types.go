@@ -14,4 +14,5 @@ type (
 	PreCheckoutQuery   func(pcq *gotgbot.PreCheckoutQuery) bool
 	ShippingQuery      func(sq *gotgbot.ShippingQuery) bool
 	Reaction           func(mru *gotgbot.MessageReactionUpdated) bool
+	BusinessConnection func(bc *gotgbot.BusinessConnection) bool
 )
