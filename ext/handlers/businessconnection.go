@@ -22,5 +22,5 @@ func (bc BusinessConnection) HandleUpdate(b *gotgbot.Bot, ctx *ext.Context) erro
 }
 
 func (bc BusinessConnection) Name() string {
-	return fmt.Sprint("businessconnection_%p", bc.Response)
+	return fmt.Sprintf("businessconnection_%p", bc.Response)
 }
