@@ -62,6 +62,22 @@ func NewContext(update *gotgbot.Update, data map[string]interface{}) *Context {
 		msg = update.EditedChannelPost
 		chat = &update.EditedChannelPost.Chat
 
+	case update.BusinessConnection != nil:
+		user = &update.BusinessConnection.User
+
+	case update.BusinessMessage != nil:
+		msg = update.BusinessMessage
+		chat = &update.BusinessMessage.Chat
+		user = update.BusinessMessage.From
+
+	case update.EditedBusinessMessage != nil:
+		msg = update.EditedBusinessMessage
+		chat = &update.EditedBusinessMessage.Chat
+		user = update.EditedBusinessMessage.From
+
+	case update.DeletedBusinessMessages != nil:
+		chat = &update.DeletedBusinessMessages.Chat
+
 	case update.MessageReaction != nil:
 		user = update.MessageReaction.User
 		chat = &update.MessageReaction.Chat
